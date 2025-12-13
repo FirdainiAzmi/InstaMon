@@ -27,8 +27,8 @@ def clean_caption(text):
 
 # ==================== Instaloader dengan login ====================
 # Masukkan akun IG kamu
-IG_USERNAME = st.secrets.get("USER")
-IG_PASSWORD = st.secrets.get("PASSWORD")
+IG_USERNAME = st.secrets.get("IG_USERNAME")
+IG_PASSWORD = st.secrets.get("IG_PASSWORD")
 
 loader = instaloader.Instaloader(
     download_pictures=False,
@@ -196,3 +196,4 @@ with tab2:
             scrolling=True
         )
         st.markdown('</div>', unsafe_allow_html=True)
+
