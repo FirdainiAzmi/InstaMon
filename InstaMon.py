@@ -2,6 +2,7 @@ import streamlit as st
 import instaloader
 import pandas as pd
 import re
+import time  # Untuk delay antar scraping
 
 st.set_page_config(page_title="InstaMon BPS", layout="wide")
 
@@ -10,6 +11,7 @@ LOOKER_EMBED_URL = "https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5b
 if "data" not in st.session_state:
     st.session_state.data = []
 
+# ==================== Fungsi ====================
 def first_sentence(text):
     text = text.strip()
     match = re.search(r"(.+?[.!?])", text)
@@ -30,7 +32,6 @@ def scrape_instagram(url):
         save_metadata=False,
         compress_json=False
     )
-
     shortcode = url.split("/")[-2]
     post = instaloader.Post.from_shortcode(loader.context, shortcode)
 
@@ -43,7 +44,7 @@ def scrape_instagram(url):
         "Link": url
     }
 
-# ==================== STYLE CSS ====================
+# ==================== Style CSS ====================
 st.markdown("""
 <style>
 /* Header gradient */
@@ -123,7 +124,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== TABS ====================
+# ==================== Tabs ====================
 tab1, tab2 = st.tabs(["🛠️ Tools Input Data", "📊 Dashboard Monitoring"])
 
 # -------------------- TAB 1 --------------------
@@ -154,8 +155,9 @@ with tab1:
                                 hasil = scrape_instagram(link)
                                 st.session_state.data.append(hasil)
                                 sukses += 1
-                            except:
-                                st.error(f"Gagal mengambil: {link}")
+                                time.sleep(2)  # Delay 2 detik per request
+                            except Exception as e:
+                                st.error(f"Gagal mengambil {link}: {e}")
                     st.success(f"✅ {sukses} data berhasil diproses!")
 
         with col2:
@@ -169,7 +171,7 @@ with tab1:
     st.subheader("📋 Hasil Scraping (Preview Instagram Feed)")
 
     if st.session_state.data:
-        for item in st.session_state.data[::-1]:  # tampilkan terbaru di atas
+        for item in st.session_state.data[::-1]:  # Tampilkan terbaru di atas
             st.markdown(f"""
             <div class="insta-card">
                 <div class="insta-caption">{item['Caption']}</div>
