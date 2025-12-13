@@ -2,7 +2,7 @@ import streamlit as st
 import instaloader
 import pandas as pd
 import re
-import time  # Untuk delay antar scraping
+import time  # Untuk delay
 
 st.set_page_config(page_title="InstaMon BPS", layout="wide")
 
@@ -25,13 +25,23 @@ def clean_caption(text):
     text = " ".join(text.split()).strip()
     return text
 
+# ==================== Instaloader dengan login ====================
+# Masukkan akun IG kamu
+IG_USERNAME = st.secrets.get("USER")
+IG_PASSWORD = st.secrets.get("PASSWORD")
+
+loader = instaloader.Instaloader(
+    download_pictures=False,
+    download_videos=False,
+    save_metadata=False,
+    compress_json=False
+)
+try:
+    loader.login(IG_USERNAME, IG_PASSWORD)
+except Exception as e:
+    st.warning(f"Gagal login: {e}. Data dari akun private mungkin tidak bisa diakses.")
+
 def scrape_instagram(url):
-    loader = instaloader.Instaloader(
-        download_pictures=False,
-        download_videos=False,
-        save_metadata=False,
-        compress_json=False
-    )
     shortcode = url.split("/")[-2]
     post = instaloader.Post.from_shortcode(loader.context, shortcode)
 
@@ -47,7 +57,6 @@ def scrape_instagram(url):
 # ==================== Style CSS ====================
 st.markdown("""
 <style>
-/* Header gradient */
 .header-gradient {
     background: linear-gradient(90deg, #1E3C72, #2A5298);
     color: white;
@@ -58,16 +67,12 @@ st.markdown("""
     font-weight: bold;
     box-shadow: 0px 4px 20px rgba(0,0,0,0.2);
 }
-
-/* Subtitle */
 .subtitle {
     color: #0B3D91;
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 15px;
 }
-
-/* Card Container */
 .card {
     background-color: #F0F8FF;
     padding: 25px;
@@ -75,8 +80,6 @@ st.markdown("""
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     margin-bottom: 20px;
 }
-
-/* Buttons */
 .stButton>button {
     background-color: #0B3D91;
     color: white;
@@ -90,8 +93,6 @@ st.markdown("""
     background-color: #1E5BB8;
     color: white;
 }
-
-/* Instagram mini card */
 .insta-card {
     background-color: white;
     padding: 20px;
@@ -103,24 +104,10 @@ st.markdown("""
 .insta-card:hover {
     transform: translateY(-5px);
 }
-.insta-caption {
-    font-size: 16px;
-    color: #0B3D91;
-    margin-bottom: 8px;
-}
-.insta-date {
-    font-size: 14px;
-    color: #555555;
-    margin-bottom: 10px;
-}
-.insta-link a {
-    color: #1E3C72;
-    text-decoration: none;
-    font-weight: bold;
-}
-.insta-link a:hover {
-    text-decoration: underline;
-}
+.insta-caption { font-size:16px; color:#0B3D91; margin-bottom:8px; }
+.insta-date { font-size:14px; color:#555555; margin-bottom:10px; }
+.insta-link a { color:#1E3C72; text-decoration:none; font-weight:bold; }
+.insta-link a:hover { text-decoration:underline; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -155,7 +142,7 @@ with tab1:
                                 hasil = scrape_instagram(link)
                                 st.session_state.data.append(hasil)
                                 sukses += 1
-                                time.sleep(2)  # Delay 2 detik per request
+                                time.sleep(2)  # Delay antar request
                             except Exception as e:
                                 st.error(f"Gagal mengambil {link}: {e}")
                     st.success(f"✅ {sukses} data berhasil diproses!")
@@ -171,7 +158,7 @@ with tab1:
     st.subheader("📋 Hasil Scraping (Preview Instagram Feed)")
 
     if st.session_state.data:
-        for item in st.session_state.data[::-1]:  # Tampilkan terbaru di atas
+        for item in st.session_state.data[::-1]:  # terbaru di atas
             st.markdown(f"""
             <div class="insta-card">
                 <div class="insta-caption">{item['Caption']}</div>
