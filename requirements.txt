@@ -2,3 +2,4 @@ instaloader
 gspread
 pandas
 bs4
+playwright
