@@ -1,3 +1,4 @@
 instaloader
 gspread
 pandas
+bs4
