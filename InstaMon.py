@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import csv
 import re
+import traceback
 from datetime import datetime
 from io import StringIO
 
@@ -22,22 +23,22 @@ if "last_processed" not in st.session_state:
     st.session_state.last_processed = []
 
 # ----------------------------
-# HELPERS (CAPTION & CSV PARSER)
+# HELPER
 # ----------------------------
-def first_sentence(text: str) -> str:
+def first_sentence(text):
     if not text:
         return ""
     m = re.search(r"(.+?[.!?])", text)
     return m.group(1) if m else text
 
-def clean_caption(text: str) -> str:
+def clean_caption(text):
     text = (text or "").replace("\n", " ").replace("\r", " ")
     text = text.encode("ascii", "ignore").decode("ascii")
     text = first_sentence(text)
     text = re.sub(r"[^A-Za-z0-9 ,.!?]+", " ", text)
     return " ".join(text.split()).strip()
 
-def parse_csv_content(csv_text: str):
+def parse_csv_content(csv_text):
     reader = csv.reader(StringIO(csv_text))
     hasil = []
 
@@ -45,9 +46,10 @@ def parse_csv_content(csv_text: str):
         if len(row) < 3:
             continue
 
-        link, caption, ts = row[0].strip(), row[1], row[2].strip()
+        link, caption, ts = row[0], row[1], row[2]
 
-        # format tanggal (ISO string)
+        # format tanggal
+        ts = (ts or "").strip()
         if ts.endswith("Z"):
             ts = ts.replace("Z", "+00:00")
 
@@ -56,7 +58,7 @@ def parse_csv_content(csv_text: str):
         hasil.append({
             "Caption": clean_caption(caption),
             "Tanggal": tanggal,
-            "Link": link
+            "Link": (link or "").strip()
         })
 
     return hasil
@@ -66,11 +68,11 @@ def parse_csv_content(csv_text: str):
 # ----------------------------
 def send_to_gsheet(rows):
     """
-    rows: list of dicts with keys: Caption, Tanggal, Link
-    Secrets needed:
-      st.secrets["gcp_service_account"] : dict from service account JSON
-      st.secrets["gsheet"]["spreadsheet_id"]
-      st.secrets["gsheet"]["sheet_name"]
+    Secrets yang dibutuhkan di Streamlit Cloud:
+      [gcp_service_account] -> isi JSON service account
+      [gsheet]
+        spreadsheet_id = "...."
+        sheet_name = "...."   (nama tab, mis: Sheet1)
     """
     sa_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(
@@ -106,9 +108,20 @@ with tab1:
     uploaded = st.file_uploader("Upload CSV (link, caption, timestamp)", type=["csv"])
 
     st.subheader("✍️ Atau Paste Data CSV")
-    pasted_text = st.text_area("Paste di sini (1 baris = 1 postingan)", height=150)
+    pasted_text = st.text_area(
+        "Paste di sini (1 baris = 1 postingan)",
+        height=150
+    )
 
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # Info email service account (biar gampang share Sheet)
+    with st.expander("🔐 Info Service Account (untuk share Google Sheet)"):
+        try:
+            st.write("Share spreadsheet kamu ke email ini sebagai **Editor**:")
+            st.code(st.secrets["gcp_service_account"]["client_email"])
+        except Exception:
+            st.warning("Secrets belum kebaca. Pastikan kamu sudah set di Streamlit Cloud > Settings > Secrets.")
+
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button("🚀 PROSES DATA"):
@@ -124,10 +137,11 @@ with tab1:
                 try:
                     data_baru = parse_csv_content(csv_text)
                     st.session_state.data.extend(data_baru)
-                    st.session_state.last_processed = data_baru  # biar tombol kirim ga dobel
+                    st.session_state.last_processed = data_baru  # hanya yang terakhir diproses
                     st.success(f"✅ {len(data_baru)} data berhasil diproses")
                 except Exception as e:
-                    st.error(f"Gagal memproses data: {e}")
+                    st.error("Gagal memproses data:")
+                    st.exception(e)
 
     with col2:
         if st.button("🗑️ RESET DATA"):
@@ -145,7 +159,9 @@ with tab1:
                     send_to_gsheet(rows)
                     st.success(f"✅ {len(rows)} baris terkirim ke Google Sheets")
             except Exception as e:
-                st.error(f"❌ Gagal kirim ke Sheets: {e}")
+                st.error("❌ Gagal kirim ke Sheets (detail di bawah):")
+                st.exception(e)
+                st.code(traceback.format_exc())
 
     st.divider()
 
