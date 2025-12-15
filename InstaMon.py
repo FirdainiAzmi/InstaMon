@@ -275,8 +275,8 @@ with tab3:
     st.markdown("### 📋 Format Data")
 
     st.code("""
-link,caption,timestamp
-"https://instagram.com/p/xxxx","Isi caption","2024-01-01T10:00:00Z"
+        link,caption,timestamp
+        "https://instagram.com/p/xxxx","Isi caption","2024-01-01T10:00:00Z"
     """)
 
     st.divider()
@@ -286,3 +286,4 @@ link,caption,timestamp
     ✅ Data diperoleh manual oleh pengguna  
     ✅ Aman untuk penggunaan internal
     """)
+
