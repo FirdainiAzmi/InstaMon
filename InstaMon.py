@@ -233,57 +233,176 @@ with tab2:
 # TAB 3 - INFORMASI PENGGUNAAN
 # =======================
 with tab3:
-    st.markdown("## 📘 Informasi Penggunaan Web InstaMon")
-
-    st.markdown("""
-    **InstaMon** adalah aplikasi internal untuk monitoring konten Instagram
-    yang digunakan secara **manual, aman, dan non-otomatis**.
-
-    Aplikasi ini **TIDAK melakukan scraping otomatis**
-    dan **TIDAK mengambil data langsung dari Instagram**.
-    """)
+    st.markdown("# 📘 Informasi Penggunaan InstaMon")
+    st.caption("Panduan resmi penggunaan aplikasi monitoring Instagram")
 
     st.divider()
 
-    st.markdown("### 🔄 Alur Kerja")
+    # ======================
+    # SECTION: APA ITU INSTAMON
+    # ======================
+    col1, col2 = st.columns([2, 1])
 
-    st.markdown("""
-    1. Pengguna login ke Instagram melalui browser  
-    2. Membuka satu postingan Instagram  
-    3. Menjalankan **bookmarklet IG to CSV**  
-    4. Bookmarklet menghasilkan **1 baris CSV**  
-    5. Data CSV dipaste ke InstaMon  
-    6. Data diproses dan dimonitor melalui dashboard
-    """)
+    with col1:
+        st.markdown("""
+        ### 🧠 Apa itu InstaMon?
 
-    st.divider()
+        **InstaMon** adalah aplikasi internal untuk **monitoring konten Instagram**
+        yang digunakan secara **manual, aman, dan non-otomatis**.
 
-    st.markdown("### 🔖 Bookmarklet")
+        Aplikasi ini **TIDAK melakukan scraping otomatis**
+        dan **TIDAK mengambil data langsung dari Instagram**.
+        """)
 
-    st.markdown("""
-    Bookmarklet dijalankan **manual di browser pengguna**
-    untuk mengambil:
-    - Link postingan
-    - Caption (kalimat pertama)
-    - Timestamp unggahan
-    """)
-
-    st.info("Bookmarklet dijalankan pada browser yang sudah login Instagram.")
+    with col2:
+        st.success("""
+        ✅ Manual  
+        ✅ Aman  
+        ✅ Audit-friendly  
+        """)
 
     st.divider()
 
-    st.markdown("### 📋 Format Data")
+    # ======================
+    # SECTION: ALUR KERJA
+    # ======================
+    st.markdown("## 🔄 Alur Kerja InstaMon")
+
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.info("""
+        **1️⃣ Instagram**
+        - Login IG
+        - Buka 1 postingan
+        """)
+
+    with c2:
+        st.info("""
+        **2️⃣ Bookmarklet**
+        - Klik IG to CSV
+        - Data disalin
+        """)
+
+    with c3:
+        st.info("""
+        **3️⃣ InstaMon**
+        - Paste CSV
+        - Proses data
+        """)
+
+    st.divider()
+
+    # ======================
+    # SECTION: FORMAT JSON
+    # ======================
+    st.markdown("## 🧾 Format Data Awal (JSON)")
+
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        st.markdown("""
+        Data awal diambil oleh **bookmarklet**
+        dalam bentuk **objek JSON**.
+        """)
+
+    with col2:
+        st.code("""
+{
+  "link": "https://www.instagram.com/p/xxxx/",
+  "caption": "Isi caption postingan Instagram",
+  "timestamp": "2024-01-01T10:00:00Z"
+}
+        """, language="json")
+
+    st.info("JSON ini hanya diproses di browser, tidak dikirim otomatis ke server.")
+
+    st.divider()
+
+    # ======================
+    # SECTION: FORMAT CSV
+    # ======================
+    st.markdown("## 📋 Format Data yang Dipaste ke InstaMon")
 
     st.code("""
-        link,caption,timestamp
-        "https://instagram.com/p/xxxx","Isi caption","2024-01-01T10:00:00Z"
+link,caption,timestamp
+"https://instagram.com/p/xxxx","Isi caption","2024-01-01T10:00:00Z"
     """)
 
     st.divider()
 
+    # ======================
+    # SECTION: BOOKMARKLET
+    # ======================
+    st.markdown("## 🔖 Bookmarklet IG to CSV")
+
+    left, right = st.columns([1, 2])
+
+    with left:
+        st.markdown("""
+        ### 🔧 Cara Membuat Bookmarklet
+        1. Tampilkan **Bookmark Bar**
+        2. Klik **Add Bookmark**
+        3. Nama: `IG to CSV`
+        4. URL: paste kode JS
+        5. Simpan
+        """)
+
+    with right:
+        st.code("""
+javascript:(()=>{const permalink=location.href.split("?")[0];
+let captionFull=document.querySelector("h1")?.innerText?.trim()||"";
+if(!captionFull){
+ const og=document.querySelector('meta[property="og:description"]')?.content||"";
+ captionFull=og.includes(":")?og.split(":").slice(1).join(":").trim():og.trim()
+}
+const timeEl=document.querySelector("article time[datetime]")||document.querySelector("time[datetime]");
+const timestamp=timeEl?timeEl.getAttribute("datetime"):"";
+
+const firstSentence=(t)=>{const m=(t||"").match(/^(.+?[.!?])(\s|$)/s);
+return m?m[1].trim():(t||"").split("\\n")[0].trim()};
+
+const clean=(t)=>firstSentence(t)
+.replace(/\\s+/g," ")
+.replace(/[^\x00-\x7F]/g,"")
+.replace(/[^A-Za-z0-9 ,\\.?!]+/g," ")
+.trim();
+
+const cap=clean(captionFull).replaceAll('"','""');
+const line=`"${permalink}","${cap}","${timestamp}"`;
+
+navigator.clipboard.writeText(line)
+.then(()=>alert("CSV disalin:\\n"+line))
+.catch(()=>prompt("Copy CSV:",line));
+})();
+        """, language="javascript")
+
+    st.divider()
+
+    # ======================
+    # SECTION: CARA PAKAI
+    # ======================
+    st.markdown("## ▶️ Cara Menggunakan")
+
+    st.markdown("""
+    1. Login Instagram melalui browser  
+    2. Buka **1 postingan Instagram**
+    3. Klik bookmark **IG to CSV**
+    4. Data otomatis tersalin
+    5. Paste ke kolom CSV di InstaMon
+    6. Klik **Proses Data**
+    """)
+
+    st.divider()
+
+    # ======================
+    # SECTION: PENEGASAN
+    # ======================
     st.success("""
     ✅ Tidak ada scraping otomatis  
     ✅ Data diperoleh manual oleh pengguna  
-    ✅ Aman untuk penggunaan internal
+    ✅ Aman untuk penggunaan internal & institusi
     """)
+
+
 
