@@ -9,9 +9,9 @@ from io import StringIO
 import gspread
 from google.oauth2.service_account import Credentials
 
-# ----------------------------
+# =========================================================
 # CONFIG
-# ----------------------------
+# =========================================================
 st.set_page_config(
     page_title="InstaMon BPS",
     layout="wide",
@@ -20,15 +20,45 @@ st.set_page_config(
 
 LOOKER_EMBED_URL = "https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5bd-43eb-881c-e74a9d86ff75/page/Z52hF"
 
+# =========================================================
+# SESSION STATE
+# =========================================================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
 if "data" not in st.session_state:
     st.session_state.data = []
 
 if "last_processed" not in st.session_state:
     st.session_state.last_processed = []
 
-# ----------------------------
-# HELPER
-# ----------------------------
+# =========================================================
+# LOGIN PAGE
+# =========================================================
+def login_page():
+    st.markdown("## 🔐 Login InstaMon BPS")
+
+    with st.container(border=True):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Login", use_container_width=True):
+            if (
+                username == st.secrets["auth"]["username"]
+                and password == st.secrets["auth"]["password"]
+            ):
+                st.session_state.logged_in = True
+                st.rerun()
+            else:
+                st.error("❌ Username atau password salah")
+
+if not st.session_state.logged_in:
+    login_page()
+    st.stop()
+
+# =========================================================
+# HELPER FUNCTIONS
+# =========================================================
 def first_sentence(text):
     if not text:
         return ""
@@ -42,17 +72,24 @@ def clean_caption(text):
     text = re.sub(r"[^A-Za-z0-9 ,.!?]+", " ", text)
     return " ".join(text.split()).strip()
 
-def parse_csv_content(csv_text):
+def parse_csv_content(csv_text, existing_links):
     reader = csv.reader(StringIO(csv_text))
     hasil = []
+    skipped = 0
 
     for row in reader:
         if len(row) < 3:
             continue
 
-        link, caption, ts = row[0], row[1], row[2]
+        link, caption, ts = row[0].strip(), row[1], row[2]
 
-        ts = (ts or "").strip()
+        if not link or link in existing_links:
+            skipped += 1
+            continue
+
+        existing_links.add(link)
+
+        ts = ts.strip()
         if ts.endswith("Z"):
             ts = ts.replace("Z", "+00:00")
 
@@ -61,14 +98,14 @@ def parse_csv_content(csv_text):
         hasil.append({
             "Caption": clean_caption(caption),
             "Tanggal": tanggal,
-            "Link": (link or "").strip()
+            "Link": link
         })
 
-    return hasil
+    return hasil, skipped
 
-# ----------------------------
+# =========================================================
 # GOOGLE SHEETS
-# ----------------------------
+# =========================================================
 def send_to_gsheet(rows):
     sa_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(
@@ -83,11 +120,11 @@ def send_to_gsheet(rows):
     ws = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
 
     # Header
-    if (ws.acell("B1").value or "").strip() == "":
+    if (ws.acell("B1").value or "") == "":
         ws.update("B1", [["Caption"]])
-    if (ws.acell("C1").value or "").strip() == "":
+    if (ws.acell("C1").value or "") == "":
         ws.update("C1", [["Tanggal"]])
-    if (ws.acell("E1").value or "").strip() == "":
+    if (ws.acell("E1").value or "") == "":
         ws.update("E1", [["Link"]])
 
     last_row = len(ws.get_all_values())
@@ -97,52 +134,58 @@ def send_to_gsheet(rows):
     values = []
     for r in rows:
         values.append([
-            r.get("Caption", ""),
-            r.get("Tanggal", ""),
-            "",
-            r.get("Link", "")
+            r["Caption"],   # B
+            r["Tanggal"],   # C
+            "",             # D (kosong)
+            r["Link"]       # E
         ])
 
     ws.update(f"B{start_row}:E{end_row}", values, value_input_option="RAW")
 
-# ----------------------------
+# =========================================================
 # UI
-# ----------------------------
+# =========================================================
 tab1, tab2 = st.tabs(["🛠️ Input Data", "📊 Dashboard Monitoring"])
 
-# ============================
+# =======================
 # TAB 1
-# ============================
+# =======================
 with tab1:
     st.markdown("## 🛠️ Input & Proses Data Instagram")
-    st.caption("Paste data CSV Instagram dengan format: **link, caption, timestamp**")
+    st.caption("Format CSV: **link, caption, timestamp**")
 
     with st.container(border=True):
         pasted_text = st.text_area(
             "📋 Paste Data CSV",
             height=220,
-            placeholder="https://instagram.com/post1, Caption postingan, 2024-01-01T10:00:00Z"
+            placeholder="https://instagram.com/p/xxxx, Caption postingan, 2024-01-01T10:00:00Z"
         )
 
-    with st.expander("🔐 Informasi Service Account Google Sheets"):
-        try:
-            st.markdown("Share Google Sheet ke email berikut sebagai **Editor**:")
-            st.code(st.secrets["gcp_service_account"]["client_email"])
-        except Exception:
-            st.warning("Secrets belum dikonfigurasi di Streamlit Cloud.")
+    with st.expander("🔐 Informasi Service Account"):
+        st.markdown("Share Google Sheet ke email ini sebagai **Editor**:")
+        st.code(st.secrets["gcp_service_account"]["client_email"])
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button("🚀 Proses Data", use_container_width=True):
             if not pasted_text.strip():
-                st.warning("Silakan paste data CSV terlebih dahulu.")
+                st.warning("Paste data terlebih dahulu.")
             else:
                 try:
-                    data_baru = parse_csv_content(pasted_text)
+                    existing_links = {d["Link"] for d in st.session_state.data}
+                    data_baru, skipped = parse_csv_content(
+                        pasted_text,
+                        existing_links
+                    )
+
                     st.session_state.data.extend(data_baru)
                     st.session_state.last_processed = data_baru
-                    st.success(f"✅ {len(data_baru)} data berhasil diproses")
+
+                    st.success(f"✅ {len(data_baru)} data diproses")
+                    if skipped > 0:
+                        st.warning(f"⚠️ {skipped} data dilewati (duplikat link)")
+
                 except Exception as e:
                     st.error("Gagal memproses data")
                     st.exception(e)
@@ -156,21 +199,21 @@ with tab1:
     with col3:
         if st.button("📤 Kirim ke Google Sheets", use_container_width=True):
             try:
-                rows = st.session_state.get("last_processed", [])
+                rows = st.session_state.last_processed
                 if not rows:
-                    st.warning("Belum ada data baru yang diproses.")
+                    st.warning("Belum ada data baru.")
                 else:
                     send_to_gsheet(rows)
                     st.success(f"✅ {len(rows)} baris terkirim ke Google Sheets")
             except Exception as e:
-                st.error("Gagal mengirim ke Google Sheets")
+                st.error("Gagal kirim ke Google Sheets")
                 st.exception(e)
                 st.code(traceback.format_exc())
 
     st.divider()
 
     if st.session_state.data:
-        st.markdown("### 📋 Data Hasil Proses")
+        st.markdown("### 📋 Data Terkumpul")
         df = pd.DataFrame(st.session_state.data)
         st.dataframe(df, use_container_width=True)
 
@@ -181,11 +224,11 @@ with tab1:
             "text/csv"
         )
     else:
-        st.info("Belum ada data yang diproses.")
+        st.info("Belum ada data.")
 
-# ============================
+# =======================
 # TAB 2
-# ============================
+# =======================
 with tab2:
     st.markdown("## 📊 Dashboard Monitoring Instagram")
     st.components.v1.iframe(
