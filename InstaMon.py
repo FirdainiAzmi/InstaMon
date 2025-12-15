@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import csv
 import re
-import traceback
 from datetime import datetime
 from io import StringIO
+import traceback
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -25,10 +25,8 @@ LOOKER_EMBED_URL = "https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5b
 # =========================================================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
 if "data" not in st.session_state:
     st.session_state.data = []
-
 if "last_processed" not in st.session_state:
     st.session_state.last_processed = []
 
@@ -36,21 +34,30 @@ if "last_processed" not in st.session_state:
 # LOGIN PAGE
 # =========================================================
 def login_page():
-    st.markdown("## 🔐 Login InstaMon BPS")
+    st.markdown("""
+    <h1 style='text-align:center'>📊 InstaMon BPS</h1>
+    <p style='text-align:center; color:gray'>
+    Sistem Monitoring Konten Instagram
+    </p>
+    """, unsafe_allow_html=True)
 
-    with st.container(border=True):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+    col1, col2, col3 = st.columns([1, 1.2, 1])
 
-        if st.button("Login", use_container_width=True):
-            if (
-                username == st.secrets["auth"]["username"]
-                and password == st.secrets["auth"]["password"]
-            ):
-                st.session_state.logged_in = True
-                st.rerun()
-            else:
-                st.error("❌ Username atau password salah")
+    with col2:
+        with st.container(border=True):
+            st.markdown("### 🔐 Login Sistem")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+
+            if st.button("Masuk", use_container_width=True):
+                if (
+                    username == st.secrets["auth"]["username"]
+                    and password == st.secrets["auth"]["password"]
+                ):
+                    st.session_state.logged_in = True
+                    st.rerun()
+                else:
+                    st.error("❌ Username atau password salah")
 
 if not st.session_state.logged_in:
     login_page()
@@ -74,8 +81,7 @@ def clean_caption(text):
 
 def parse_csv_content(csv_text, existing_links):
     reader = csv.reader(StringIO(csv_text))
-    hasil = []
-    skipped = 0
+    hasil, skipped = [], 0
 
     for row in reader:
         if len(row) < 3:
@@ -114,32 +120,19 @@ def send_to_gsheet(rows):
     )
     client = gspread.authorize(creds)
 
-    spreadsheet_id = st.secrets["gsheet"]["spreadsheet_id"]
-    sheet_name = st.secrets["gsheet"]["sheet_name"]
+    ws = client.open_by_key(
+        st.secrets["gsheet"]["spreadsheet_id"]
+    ).worksheet(
+        st.secrets["gsheet"]["sheet_name"]
+    )
 
-    ws = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
+    if not ws.acell("B1").value:
+        ws.update("B1:E1", [["Caption", "Tanggal", "", "Link"]])
 
-    if (ws.acell("B1").value or "") == "":
-        ws.update("B1", [["Caption"]])
-    if (ws.acell("C1").value or "") == "":
-        ws.update("C1", [["Tanggal"]])
-    if (ws.acell("E1").value or "") == "":
-        ws.update("E1", [["Link"]])
+    start_row = len(ws.get_all_values()) + 1
+    values = [[r["Caption"], r["Tanggal"], "", r["Link"]] for r in rows]
 
-    last_row = len(ws.get_all_values())
-    start_row = max(2, last_row + 1)
-    end_row = start_row + len(rows) - 1
-
-    values = []
-    for r in rows:
-        values.append([
-            r["Caption"],   # B
-            r["Tanggal"],   # C
-            "",             # D
-            r["Link"]       # E
-        ])
-
-    ws.update(f"B{start_row}:E{end_row}", values, value_input_option="RAW")
+    ws.update(f"B{start_row}:E{start_row+len(values)-1}", values)
 
 # =========================================================
 # UI TABS
@@ -150,57 +143,62 @@ tab1, tab2, tab3 = st.tabs([
     "📘 Informasi Penggunaan"
 ])
 
-# =======================
-# TAB 1 - REKAP DATA
-# =======================
+# =========================================================
+# TAB 1 — REKAP DATA
+# =========================================================
 with tab1:
-    st.markdown("## 🛠️ Input & Proses Data Instagram")
-    st.caption("Format hasil bookmark: **link, caption, timestamp**")
+    st.markdown("## 🛠️ Rekap Konten Instagram")
+    st.caption("Input manual hasil bookmarklet Instagram")
 
-    with st.container(border=True):
-        pasted_text = st.text_area(
-            "📋 Paste Data CSV",
-            height=220
-        )
+    c1, c2 = st.columns([2, 1])
 
-    with st.expander("🔐 Informasi Service Account"):
-        st.markdown("Share Google Sheet ke email ini sebagai **Editor**:")
-        st.code(st.secrets["gcp_service_account"]["client_email"])
+    with c1:
+        with st.container(border=True):
+            st.markdown("### 📋 Input Data CSV")
+            pasted_text = st.text_area(
+                "Paste hasil bookmarklet di sini",
+                height=220,
+                placeholder='"link","caption","timestamp"'
+            )
 
-    col1, col2, col3 = st.columns(3)
+    with c2:
+        with st.container(border=True):
+            st.markdown("### ℹ️ Informasi Teknis")
+            st.info("""
+            ✅ Non scraping  
+            ✅ Manual input  
+            ✅ Aman & audit-friendly
+            """)
 
-    with col1:
+    b1, b2, b3 = st.columns(3)
+
+    with b1:
         if st.button("🚀 Proses Data", use_container_width=True):
             if not pasted_text.strip():
-                st.warning("Paste data terlebih dahulu.")
+                st.warning("Data masih kosong.")
             else:
                 existing_links = {d["Link"] for d in st.session_state.data}
-                data_baru, skipped = parse_csv_content(
-                    pasted_text,
-                    existing_links
-                )
-
+                data_baru, skipped = parse_csv_content(pasted_text, existing_links)
                 st.session_state.data.extend(data_baru)
                 st.session_state.last_processed = data_baru
 
-                st.success(f"✅ {len(data_baru)} data diproses")
-                if skipped > 0:
-                    st.warning(f"⚠️ {skipped} data dilewati (duplikat link)")
+                st.success(f"{len(data_baru)} data diproses")
+                if skipped:
+                    st.warning(f"{skipped} duplikat dilewati")
 
-    with col2:
-        if st.button("🗑️ Reset Data", use_container_width=True):
+    with b2:
+        if st.button("🗑️ Reset", use_container_width=True):
             st.session_state.data = []
             st.session_state.last_processed = []
-            st.success("Data berhasil direset")
+            st.success("Data direset")
 
-    with col3:
-        if st.button("📤 Kirim ke Google Sheets", use_container_width=True):
-            rows = st.session_state.last_processed
-            if not rows:
-                st.warning("Belum ada data baru.")
+    with b3:
+        if st.button("📤 Kirim ke Sheets", use_container_width=True):
+            if not st.session_state.last_processed:
+                st.warning("Belum ada data baru")
             else:
-                send_to_gsheet(rows)
-                st.success(f"✅ {len(rows)} baris terkirim ke Google Sheets")
+                send_to_gsheet(st.session_state.last_processed)
+                st.success("Data terkirim")
 
     st.divider()
 
@@ -211,101 +209,57 @@ with tab1:
         st.download_button(
             "⬇️ Download CSV",
             df.to_csv(index=False).encode("utf-8"),
-            "hasil_monitoring_instagram.csv",
+            "instamon.csv",
             "text/csv"
         )
     else:
         st.info("Belum ada data.")
 
-# =======================
-# TAB 2 - DASHBOARD
-# =======================
+# =========================================================
+# TAB 2 — DASHBOARD
+# =========================================================
 with tab2:
-    st.markdown("## 📊 Dashboard Monitoring Instagram")
-    st.components.v1.iframe(
-        src=LOOKER_EMBED_URL,
-        width=1400,
-        height=720,
-        scrolling=True
-    )
+    st.markdown("## 📊 Dashboard Monitoring")
+    st.caption("Visualisasi data Instagram berbasis Looker Studio")
 
-# =======================
-# TAB 3 - INFORMASI PENGGUNAAN
-# =======================
+    with st.container(border=True):
+        st.components.v1.iframe(
+            src=LOOKER_EMBED_URL,
+            height=750,
+            scrolling=True
+        )
+
+# =========================================================
+# TAB 3 — INFORMASI PENGGUNAAN
+# =========================================================
 with tab3:
-    st.markdown("# 📘 Informasi Penggunaan InstaMon")
-    st.caption("Panduan penggunaan web monitoring Instagram")
-
+    st.markdown("# 📘 Panduan Penggunaan InstaMon")
     st.divider()
 
-    # ======================
-    # SECTION: APA ITU INSTAMON
-    # ======================
     st.markdown("""
     ### 🧠 Apa itu InstaMon?
-    
-    **InstaMon** adalah web internal untuk **merekap konten Instagram**
-    dan **memonitoring konten kegiatan**.
+    **InstaMon** adalah sistem internal untuk merekap dan memonitor
+    konten Instagram secara manual, aman, dan terkontrol.
     """)
-    
 
     st.divider()
-
-    # ======================
-    # SECTION: ALUR KERJA
-    # ======================
-    st.markdown("## 🔄 Alur Kerja InstaMon")
 
     c1, c2, c3 = st.columns(3)
-
-    with c1:
-        st.info("""
-        **1️⃣Bookmarklet**
-        - Klik IG to CSV
-        - Data disalin
-        """)
-    with c2:
-        st.info("""
-        **2️⃣ Rekap Data**
-        - Paste hasil bookmarklet
-        - Proses data
-        - Kirim data ke Google Sheets
-        """)
-    with c3:
-        st.info("""
-        **3️⃣ Dashboard Monitoring**
-        - Hasil rekap data yang dilakukan akan ditampilkan pada dashbaord tersebut
-        """)
-    st.divider()
-    # ======================
-    # SECTION: CARA PAKAI
-    # ======================
-    st.markdown("## ▶️ Cara Penggunaan InstaMon")
-
-    st.markdown("""
-    1. Login Instagram melalui browser  
-    2. Buka **1 postingan Instagram**
-    3. Klik bookmark **IG to CSV** yang sudah dibuat (lihat halaman bawah untuk cara pembuatan bookmarklet)
-    4. Data otomatis tersalin
-    5. Paste ke kolom CSV di InstaMon
-    6. Klik **Proses Data**
-    """)
+    c1.info("1️⃣ Klik bookmarklet di postingan IG")
+    c2.info("2️⃣ Paste hasil ke InstaMon")
+    c3.info("3️⃣ Analisis via Dashboard")
 
     st.divider()
-    # ======================
-    # SECTION: BOOKMARKLET
-    # ======================
+
     st.markdown("## 🔖 Cara Membuat Bookmarklet")
-
     left, right = st.columns([1, 2])
 
     with left:
         st.markdown("""
-        1. Tampilkan **Bookmark Bar** dengan Ctrl+Shift+B
-        2. Klik kanan pada **Bookmark Bar** dan klik **Bookmark Manager**
-        3. KLik **Add New Bookmark**  
-        4. Nama: `IG to CSV`
-        4. URL: paste kode JS di samping
+        1. Tampilkan Bookmark Bar (Ctrl+Shift+B)  
+        2. Bookmark Manager → Add Bookmark  
+        3. Nama: **IG to CSV**  
+        4. URL: paste kode di samping  
         5. Simpan
         """)
 
@@ -319,30 +273,10 @@ if(!captionFull){
 }
 const timeEl=document.querySelector("article time[datetime]")||document.querySelector("time[datetime]");
 const timestamp=timeEl?timeEl.getAttribute("datetime"):"";
-
-const firstSentence=(t)=>{const m=(t||"").match(/^(.+?[.!?])(\s|$)/s);
-return m?m[1].trim():(t||"").split("\\n")[0].trim()};
-
-const clean=(t)=>firstSentence(t)
-.replace(/\\s+/g," ")
-.replace(/[^\x00-\x7F]/g,"")
-.replace(/[^A-Za-z0-9 ,\\.?!]+/g," ")
-.trim();
-
-const cap=clean(captionFull).replaceAll('"','""');
-const line=`"${permalink}","${cap}","${timestamp}"`;
-
+const clean=t=>t.replace(/\\s+/g," ").replace(/[^\x00-\x7F]/g,"")
+.replace(/[^A-Za-z0-9 ,\\.?!]+/g," ").trim();
+const line=`"${permalink}","${clean(captionFull)}","${timestamp}"`;
 navigator.clipboard.writeText(line)
-.then(()=>alert("CSV disalin:\\n"+line))
-.catch(()=>prompt("Copy CSV:",line));
+.then(()=>alert("CSV disalin:\\n"+line));
 })();
         """, language="javascript")
-
-    st.divider()
-
-
-
-
-
-
-
