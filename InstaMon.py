@@ -283,7 +283,7 @@ with tab3:
         - Proses data
         - Kirim data ke Google Sheets
         """)
-    with c:
+    with c3:
         st.info("""
         **3️⃣ Dashboard Monitoring**
         - Hasil rekap data yang dilakukan akan ditampilkan pada dashbaord tersebut
@@ -352,6 +352,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
