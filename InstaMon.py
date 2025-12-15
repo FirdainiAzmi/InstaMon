@@ -294,44 +294,6 @@ with tab3:
     st.divider()
 
     # ======================
-    # SECTION: FORMAT JSON
-    # ======================
-    st.markdown("## 🧾 Format Data Awal (JSON)")
-
-    col1, col2 = st.columns([1, 2])
-
-    with col1:
-        st.markdown("""
-        Data awal diambil oleh **bookmarklet**
-        dalam bentuk **objek JSON**.
-        """)
-
-    with col2:
-        st.code("""
-{
-  "link": "https://www.instagram.com/p/xxxx/",
-  "caption": "Isi caption postingan Instagram",
-  "timestamp": "2024-01-01T10:00:00Z"
-}
-        """, language="json")
-
-    st.info("JSON ini hanya diproses di browser, tidak dikirim otomatis ke server.")
-
-    st.divider()
-
-    # ======================
-    # SECTION: FORMAT CSV
-    # ======================
-    st.markdown("## 📋 Format Data yang Dipaste ke InstaMon")
-
-    st.code("""
-link,caption,timestamp
-"https://instagram.com/p/xxxx","Isi caption","2024-01-01T10:00:00Z"
-    """)
-
-    st.divider()
-
-    # ======================
     # SECTION: BOOKMARKLET
     # ======================
     st.markdown("## 🔖 Bookmarklet IG to CSV")
@@ -341,9 +303,10 @@ link,caption,timestamp
     with left:
         st.markdown("""
         ### 🔧 Cara Membuat Bookmarklet
-        1. Tampilkan **Bookmark Bar**
-        2. Klik **Add Bookmark**
-        3. Nama: `IG to CSV`
+        1. Tampilkan **Bookmark Bar** dengan Ctrl+Shift+B
+        2. Klik kanan pada **Bookmark Bar** dan klik **Bookmark Manager**
+        3. KLik **Add New Bookmark**  
+        4. Nama: `IG to CSV`
         4. URL: paste kode JS
         5. Simpan
         """)
@@ -395,14 +358,6 @@ navigator.clipboard.writeText(line)
 
     st.divider()
 
-    # ======================
-    # SECTION: PENEGASAN
-    # ======================
-    st.success("""
-    ✅ Tidak ada scraping otomatis  
-    ✅ Data diperoleh manual oleh pengguna  
-    ✅ Aman untuk penggunaan internal & institusi
-    """)
 
 
 
