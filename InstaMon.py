@@ -241,14 +241,13 @@ with tab3:
     # ======================
     # SECTION: APA ITU INSTAMON
     # ======================
-    col1 = st.columns(1)
-
-    with col1:
-        st.markdown("""
-        ### 🧠 Apa itu InstaMon?
-
-        **InstaMon** adalah web internal untuk **merekap konten Instagram** dan **memonitoring konten kegiatan**.
-        """)
+    st.markdown("""
+    ### 🧠 Apa itu InstaMon?
+    
+    **InstaMon** adalah web internal untuk **merekap konten Instagram**
+    dan **memonitoring konten kegiatan**.
+    """)
+    
 
     st.divider()
 
@@ -341,5 +340,6 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
