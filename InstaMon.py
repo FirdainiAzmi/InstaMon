@@ -155,7 +155,7 @@ tab1, tab2, tab3 = st.tabs([
 # =======================
 with tab1:
     st.markdown("## 🛠️ Input & Proses Data Instagram")
-    st.caption("Format CSV: **link, caption, timestamp**")
+    st.caption("Format hasil bookmark: **link, caption, timestamp**")
 
     with st.container(border=True):
         pasted_text = st.text_area(
@@ -339,6 +339,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
