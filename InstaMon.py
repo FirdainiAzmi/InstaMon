@@ -234,31 +234,20 @@ with tab2:
 # =======================
 with tab3:
     st.markdown("# 📘 Informasi Penggunaan InstaMon")
-    st.caption("Panduan resmi penggunaan aplikasi monitoring Instagram")
+    st.caption("Panduan penggunaan web monitoring Instagram")
 
     st.divider()
 
     # ======================
     # SECTION: APA ITU INSTAMON
     # ======================
-    col1, col2 = st.columns([2, 1])
+    col1 = st.columns([2])
 
     with col1:
         st.markdown("""
         ### 🧠 Apa itu InstaMon?
 
-        **InstaMon** adalah aplikasi internal untuk **monitoring konten Instagram**
-        yang digunakan secara **manual, aman, dan non-otomatis**.
-
-        Aplikasi ini **TIDAK melakukan scraping otomatis**
-        dan **TIDAK mengambil data langsung dari Instagram**.
-        """)
-
-    with col2:
-        st.success("""
-        ✅ Manual  
-        ✅ Aman  
-        ✅ Audit-friendly  
+        **InstaMon** adalah web internal untuk **merekap konten Instagram** dan **memonitoring konten kegiatan**.
         """)
 
     st.divider()
@@ -352,10 +341,3 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
-
-
-
-
-
-
-
