@@ -145,13 +145,13 @@ def send_to_gsheet(rows):
 # UI TABS
 # =========================================================
 tab1, tab2, tab3 = st.tabs([
-    "🛠️ Input Data",
+    "🛠️ Rekap Data",
     "📊 Dashboard Monitoring",
     "📘 Informasi Penggunaan"
 ])
 
 # =======================
-# TAB 1 - INPUT DATA
+# TAB 1 - REKAP DATA
 # =======================
 with tab1:
     st.markdown("## 🛠️ Input & Proses Data Instagram")
@@ -339,6 +339,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
