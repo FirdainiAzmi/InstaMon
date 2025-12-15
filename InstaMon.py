@@ -119,7 +119,6 @@ def send_to_gsheet(rows):
 
     ws = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
 
-    # Header
     if (ws.acell("B1").value or "") == "":
         ws.update("B1", [["Caption"]])
     if (ws.acell("C1").value or "") == "":
@@ -136,19 +135,23 @@ def send_to_gsheet(rows):
         values.append([
             r["Caption"],   # B
             r["Tanggal"],   # C
-            "",             # D (kosong)
+            "",             # D
             r["Link"]       # E
         ])
 
     ws.update(f"B{start_row}:E{end_row}", values, value_input_option="RAW")
 
 # =========================================================
-# UI
+# UI TABS
 # =========================================================
-tab1, tab2 = st.tabs(["🛠️ Input Data", "📊 Dashboard Monitoring"])
+tab1, tab2, tab3 = st.tabs([
+    "🛠️ Input Data",
+    "📊 Dashboard Monitoring",
+    "📘 Informasi Penggunaan"
+])
 
 # =======================
-# TAB 1
+# TAB 1 - INPUT DATA
 # =======================
 with tab1:
     st.markdown("## 🛠️ Input & Proses Data Instagram")
@@ -157,8 +160,7 @@ with tab1:
     with st.container(border=True):
         pasted_text = st.text_area(
             "📋 Paste Data CSV",
-            height=220,
-            placeholder="https://instagram.com/p/xxxx, Caption postingan, 2024-01-01T10:00:00Z"
+            height=220
         )
 
     with st.expander("🔐 Informasi Service Account"):
@@ -172,23 +174,18 @@ with tab1:
             if not pasted_text.strip():
                 st.warning("Paste data terlebih dahulu.")
             else:
-                try:
-                    existing_links = {d["Link"] for d in st.session_state.data}
-                    data_baru, skipped = parse_csv_content(
-                        pasted_text,
-                        existing_links
-                    )
+                existing_links = {d["Link"] for d in st.session_state.data}
+                data_baru, skipped = parse_csv_content(
+                    pasted_text,
+                    existing_links
+                )
 
-                    st.session_state.data.extend(data_baru)
-                    st.session_state.last_processed = data_baru
+                st.session_state.data.extend(data_baru)
+                st.session_state.last_processed = data_baru
 
-                    st.success(f"✅ {len(data_baru)} data diproses")
-                    if skipped > 0:
-                        st.warning(f"⚠️ {skipped} data dilewati (duplikat link)")
-
-                except Exception as e:
-                    st.error("Gagal memproses data")
-                    st.exception(e)
+                st.success(f"✅ {len(data_baru)} data diproses")
+                if skipped > 0:
+                    st.warning(f"⚠️ {skipped} data dilewati (duplikat link)")
 
     with col2:
         if st.button("🗑️ Reset Data", use_container_width=True):
@@ -198,22 +195,16 @@ with tab1:
 
     with col3:
         if st.button("📤 Kirim ke Google Sheets", use_container_width=True):
-            try:
-                rows = st.session_state.last_processed
-                if not rows:
-                    st.warning("Belum ada data baru.")
-                else:
-                    send_to_gsheet(rows)
-                    st.success(f"✅ {len(rows)} baris terkirim ke Google Sheets")
-            except Exception as e:
-                st.error("Gagal kirim ke Google Sheets")
-                st.exception(e)
-                st.code(traceback.format_exc())
+            rows = st.session_state.last_processed
+            if not rows:
+                st.warning("Belum ada data baru.")
+            else:
+                send_to_gsheet(rows)
+                st.success(f"✅ {len(rows)} baris terkirim ke Google Sheets")
 
     st.divider()
 
     if st.session_state.data:
-        st.markdown("### 📋 Data Terkumpul")
         df = pd.DataFrame(st.session_state.data)
         st.dataframe(df, use_container_width=True)
 
@@ -227,7 +218,7 @@ with tab1:
         st.info("Belum ada data.")
 
 # =======================
-# TAB 2
+# TAB 2 - DASHBOARD
 # =======================
 with tab2:
     st.markdown("## 📊 Dashboard Monitoring Instagram")
@@ -237,3 +228,61 @@ with tab2:
         height=720,
         scrolling=True
     )
+
+# =======================
+# TAB 3 - INFORMASI PENGGUNAAN
+# =======================
+with tab3:
+    st.markdown("## 📘 Informasi Penggunaan Web InstaMon")
+
+    st.markdown("""
+    **InstaMon** adalah aplikasi internal untuk monitoring konten Instagram
+    yang digunakan secara **manual, aman, dan non-otomatis**.
+
+    Aplikasi ini **TIDAK melakukan scraping otomatis**
+    dan **TIDAK mengambil data langsung dari Instagram**.
+    """)
+
+    st.divider()
+
+    st.markdown("### 🔄 Alur Kerja")
+
+    st.markdown("""
+    1. Pengguna login ke Instagram melalui browser  
+    2. Membuka satu postingan Instagram  
+    3. Menjalankan **bookmarklet IG to CSV**  
+    4. Bookmarklet menghasilkan **1 baris CSV**  
+    5. Data CSV dipaste ke InstaMon  
+    6. Data diproses dan dimonitor melalui dashboard
+    """)
+
+    st.divider()
+
+    st.markdown("### 🔖 Bookmarklet")
+
+    st.markdown("""
+    Bookmarklet dijalankan **manual di browser pengguna**
+    untuk mengambil:
+    - Link postingan
+    - Caption (kalimat pertama)
+    - Timestamp unggahan
+    """)
+
+    st.info("Bookmarklet dijalankan pada browser yang sudah login Instagram.")
+
+    st.divider()
+
+    st.markdown("### 📋 Format Data")
+
+    st.code("""
+link,caption,timestamp
+"https://instagram.com/p/xxxx","Isi caption","2024-01-01T10:00:00Z"
+    """)
+
+    st.divider()
+
+    st.success("""
+    ✅ Tidak ada scraping otomatis  
+    ✅ Data diperoleh manual oleh pengguna  
+    ✅ Aman untuk penggunaan internal
+    """)
