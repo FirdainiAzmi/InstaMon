@@ -295,18 +295,17 @@ with tab3:
     # ======================
     # SECTION: BOOKMARKLET
     # ======================
-    st.markdown("## 🔖 Bookmarklet IG to CSV")
+    st.markdown("## 🔖 Cara Membuat Bookmarklet")
 
     left, right = st.columns([1, 2])
 
     with left:
         st.markdown("""
-        ### 🔧 Cara Membuat Bookmarklet
         1. Tampilkan **Bookmark Bar** dengan Ctrl+Shift+B
         2. Klik kanan pada **Bookmark Bar** dan klik **Bookmark Manager**
         3. KLik **Add New Bookmark**  
         4. Nama: `IG to CSV`
-        4. URL: paste kode JS
+        4. URL: paste kode JS di samping
         5. Simpan
         """)
 
@@ -340,6 +339,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
