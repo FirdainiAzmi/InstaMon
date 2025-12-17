@@ -305,7 +305,7 @@ with tab1:
         st.success("Antrean berhasil dikosongkan.")
         st.rerun()
     with st.container(border=True):
-    col_icon, col_text = st.columns([0.1, 0.9])
+        col_icon, col_text = st.columns([0.1, 0.9])
     with col_icon:
         st.image("https://img.icons8.com/color/48/google-sheets.png", width=40)
     with col_text:
@@ -462,6 +462,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
