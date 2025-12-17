@@ -284,8 +284,8 @@ with tab1:
             
             st.toast("Data sedang diproses...", icon="⏳")
             st.success(f"✅ {len(data_baru)} data diproses!!")
-        if skipped > 0:
-            st.warning(f"⚠️ {skipped} data duplikat dilewati.")
+            if skipped > 0:
+                st.warning(f"⚠️ {skipped} data duplikat dilewati.")
     
     # --- LOGIKA GSHEET (LOGIKA ASLI ANDA) ---
     if btn_gsheet:
@@ -449,6 +449,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
