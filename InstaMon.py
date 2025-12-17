@@ -235,6 +235,21 @@ with st.sidebar:
 st.title("🚀 InstaMon BPS")
 st.markdown("Automasi rekap konten Instagram ke Google Sheets.")
 
+URL_GSHEET = f"https://docs.google.com/spreadsheets/d/{st.secrets['gsheet']['spreadsheet_id']}"
+
+with st.container(border=True):
+    col_icon, col_text = st.columns([0.1, 0.9])
+    with col_icon:
+        st.image("https://img.icons8.com/color/48/google-sheets.png", width=40)
+    with col_text:
+        st.markdown(f"""
+            <div style="line-height: 1.2;">
+                <b style="font-size: 16px;">Database Google Sheets</b><br>
+                <a href="{URL_GSHEET}" target="_blank" style="color: #4F46E5; text-decoration: none; font-size: 14px;">
+                    👉 Klik di sini untuk membuka file database asli
+                </a>
+            </div>
+        """, unsafe_allow_html=True)
 st.write("---")
 
 # =========================================================
@@ -448,6 +463,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
