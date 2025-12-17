@@ -238,16 +238,29 @@ with tab1:
     # --- BAGIAN ATAS: INPUT & AKSI ---
     col_in, col_opt = st.columns([2, 1])
     
+    # with col_in:
+    #     st.markdown("#### 📥 Paste Data")
+    #     # Menggunakan container agar area input terlihat seperti kartu (card)
+    #     with st.container(border=True):
+    #         input_csv = st.text_area(
+    #             "Masukkan kode dari bookmarklet:", 
+    #             height=215, 
+    #             placeholder="Link, Caption, Timestamp...",
+    #             label_visibility="collapsed" # Menyembunyikan label agar lebih clean
+    #         )
+
     with col_in:
-        st.markdown("#### 📥 Paste Data")
-        # Menggunakan container agar area input terlihat seperti kartu (card)
-        with st.container(border=True):
-            input_csv = st.text_area(
-                "Masukkan kode dari bookmarklet:", 
-                height=215, 
-                placeholder="Link, Caption, Timestamp...",
-                label_visibility="collapsed" # Menyembunyikan label agar lebih clean
-            )
+    st.markdown("#### 📥 Paste Data")
+    with st.container(border=True):
+        # Tambahkan input nama penginput di sini
+        nama_penginput = st.text_input("👤 Nama Penginput:", placeholder="Masukkan nama Anda...")
+        
+        input_csv = st.text_area(
+            "Masukkan kode dari bookmarklet:", 
+            height=150, # Sedikit dikurangi tingginya agar muat dengan input nama
+            placeholder="Link, Caption, Timestamp...",
+            label_visibility="collapsed"
+        )
     
     with col_opt:
         st.markdown("#### ⚙️ Aksi Cepat")
@@ -442,6 +455,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
