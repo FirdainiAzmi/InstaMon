@@ -9,7 +9,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # =========================================================
-# 1. CONFIG & STYLE (TAMPILAN PREMIUM VERSI 2)
+# 🎨 CONFIG & PREMIUM STYLING (VERSI 2)
 # =========================================================
 st.set_page_config(
     page_title="InstaMon BPS",
@@ -17,52 +17,68 @@ st.set_page_config(
     page_icon="📊"
 )
 
+# Custom CSS untuk tampilan Dashboard Modern
 st.markdown("""
     <style>
-    /* Global Background */
-    .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    }
+    /* Mengubah font ke Inter/Jakarta Sans agar modern */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     
-    /* Header Styling */
-    h1, h2, h3 {
+    html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
-        color: #1E293B;
     }
 
-    /* Card Styling */
-    div[data-testid="stExpander"], div[data-container="true"] {
-        background-color: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    /* Gradient Background untuk seluruh aplikasi */
+    .stApp {
+        background: linear-gradient(135deg, #f8faff 0%, #eef2f7 100%);
+    }
+
+    /* Glassmorphism Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #1e293b !important;
+        border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    [data-testid="stSidebar"] .stMarkdown h2, [data-testid="stSidebar"] .stMarkdown p {
+        color: white !important;
+    }
+
+    /* Container Card Style */
+    div[data-testid="stExpander"], div.stContainer {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+        padding: 10px;
     }
 
     /* Tab Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 10px;
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: white;
-        border-radius: 10px 10px 0px 0px;
-        padding: 10px 20px;
+        background-color: #f1f5f9;
+        border-radius: 8px 8px 0px 0px;
+        padding: 8px 20px;
         font-weight: 600;
+        color: #64748b;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #4F46E5 !important;
+        background-color: #3b82f6 !important;
         color: white !important;
     }
 
     /* Button Styling */
     .stButton>button {
-        border-radius: 10px;
+        border-radius: 8px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     .stButton>button[kind="primary"] {
-        background: linear-gradient(45deg, #4F46E5, #7C3AED);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         border: none;
+    }
+    .stButton>button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -70,7 +86,7 @@ st.markdown("""
 LOOKER_EMBED_URL = "https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5bd-43eb-881c-e74a9d86ff75/page/Z52hF"
 
 # =========================================================
-# 2. SESSION STATE (LOGIKA ASLI)
+# 🔄 SESSION STATE (LOGIKA ASLI)
 # =========================================================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -80,21 +96,20 @@ if "last_processed" not in st.session_state:
     st.session_state.last_processed = []
 
 # =========================================================
-# 3. LOGIN PAGE (TAMPILAN PREMIUM)
+# 🔐 LOGIN PAGE (DESAIN PREMIUM)
 # =========================================================
 def login_page():
-    col1, col2, col3 = st.columns([1, 1.5, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         st.write("#")
-        with st.container(border=True):
-            st.image("https://img.icons8.com/fluency/96/instagram-new.png", width=60)
-            st.title("🔐 Login InstaMon")
-            st.caption("Aplikasi Monitoring Konten BPS")
+        with st.container():
+            st.markdown("<h2 style='text-align: center;'>🔐 InstaMon BPS</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: gray;'>Internal Content Monitoring System</p>", unsafe_allow_html=True)
+            st.write("---")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
             
-            username = st.text_input("Username", placeholder="Masukkan username")
-            password = st.text_input("Password", type="password", placeholder="Masukkan password")
-
-            if st.button("Login Sekarang 🚀", use_container_width=True, type="primary"):
+            if st.button("Masuk Ke Dashboard", use_container_width=True, type="primary"):
                 if (username == st.secrets["auth"]["username"]
                     and password == st.secrets["auth"]["password"]):
                     st.session_state.logged_in = True
@@ -107,7 +122,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 # =========================================================
-# 4. HELPER FUNCTIONS (LOGIKA ASLI)
+# 🛠️ HELPER FUNCTIONS (LOGIKA ASLI)
 # =========================================================
 def first_sentence(text):
     if not text: return ""
@@ -149,11 +164,9 @@ def send_to_gsheet(rows):
     spreadsheet_id = st.secrets["gsheet"]["spreadsheet_id"]
     sheet_name = st.secrets["gsheet"]["sheet_name"]
     ws = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
-    
     if (ws.acell("B1").value or "") == "": ws.update("B1", [["Caption"]])
     if (ws.acell("C1").value or "") == "": ws.update("C1", [["Tanggal"]])
     if (ws.acell("E1").value or "") == "": ws.update("E1", [["Link"]])
-
     last_row = len(ws.get_all_values())
     start_row = max(2, last_row + 1)
     end_row = start_row + len(rows) - 1
@@ -161,53 +174,59 @@ def send_to_gsheet(rows):
     ws.update(f"B{start_row}:E{end_row}", values, value_input_option="RAW")
 
 # =========================================================
-# 5. UI TABS (TAMPILAN PREMIUM VERSI 2)
+# 📂 SIDEBAR NAVIGATION
 # =========================================================
-st.title("📊 InstaMon BPS")
-st.markdown("Automasi Monitoring Konten Instagram")
-
-tab1, tab2, tab3 = st.tabs([
-    "🛠️ Rekap Data", 
-    "📊 Dashboard Monitoring", 
-    "📘 Informasi Penggunaan"
-])
-
-# --- TAB 1: REKAP DATA ---
-with tab1:
-    st.markdown("### 🛠️ Input & Proses Data")
+with st.sidebar:
+    st.image("https://img.icons8.com/fluency/96/combo-chart.png", width=80)
+    st.markdown("## Navigasi")
+    st.write("Pilih halaman:")
+    # Navigasi menggunakan radio button agar lebih clean
+    page = st.radio("Go to", ["Rekap Data", "Dashboard", "Panduan"], label_visibility="collapsed")
     
-    col_main, col_side = st.columns([2, 1])
+    st.write("---")
+    st.markdown("### 🟢 Status Koneksi")
+    st.caption(f"Google Sheets: **{st.secrets['gsheet']['sheet_name']}**")
     
-    with col_main:
-        with st.container(border=True):
-            pasted_text = st.text_area(
-                "📋 Paste Data CSV dari Bookmarklet",
-                height=220,
-                placeholder="Tempel hasil copy di sini..."
-            )
+    if st.button("Logout", use_container_width=True):
+        st.session_state.logged_in = False
+        st.rerun()
+
+# =========================================================
+# 🚀 MAIN CONTENT
+# =========================================================
+
+# --- HALAMAN 1: REKAP DATA ---
+if page == "Rekap Data":
+    st.title("🛠️ Rekap Data Instagram")
+    st.markdown("Proses data CSV dari bookmarklet ke Google Sheets secara otomatis.")
+
+    col_input, col_stats = st.columns([2, 1])
+    
+    with col_input:
+        with st.container():
+            pasted_text = st.text_area("📋 Paste Data CSV Di Sini", height=220, placeholder="link, caption, timestamp...")
             
             c1, c2, c3 = st.columns(3)
             with c1:
                 if st.button("🚀 Proses Data", use_container_width=True, type="primary"):
                     if not pasted_text.strip():
-                        st.warning("Paste data terlebih dahulu.")
+                        st.warning("Data masih kosong.")
                     else:
                         existing_links = {d["Link"] for d in st.session_state.data}
                         data_baru, skipped = parse_csv_content(pasted_text, existing_links)
                         st.session_state.data.extend(data_baru)
                         st.session_state.last_processed = data_baru
-                        st.success(f"✅ {len(data_baru)} data diproses")
-                        if skipped > 0: st.warning(f"⚠️ {skipped} data dilewati (duplikat)")
+                        st.success(f"Berhasil: {len(data_baru)} baris")
+                        if skipped > 0: st.info(f"Duplikat: {skipped} dilewati")
             
             with c2:
-                if st.button("📤 Kirim ke GSheet", use_container_width=True):
-                    rows = st.session_state.last_processed
-                    if not rows: st.warning("Belum ada data baru.")
+                if st.button("📤 Kirim ke GSheets", use_container_width=True):
+                    if not st.session_state.last_processed:
+                        st.warning("Belum ada data baru.")
                     else:
-                        with st.spinner("Mengirim ke Google Sheets..."):
-                            send_to_gsheet(rows)
-                            st.success(f"✅ {len(rows)} baris terkirim!")
-                            st.balloons()
+                        send_to_gsheet(st.session_state.last_processed)
+                        st.balloons()
+                        st.success("Data terkirim ke Google Sheets!")
             
             with c3:
                 if st.button("🗑️ Reset Antrean", use_container_width=True):
@@ -215,48 +234,47 @@ with tab1:
                     st.session_state.last_processed = []
                     st.rerun()
 
-    with col_side:
-        with st.expander("🔐 Akun Google Sheets", expanded=True):
-            st.caption("Share Sheet ke email ini:")
-            st.code(st.secrets["gcp_service_account"]["client_email"])
-            st.info("Pastikan Sheet memiliki kolom: Caption (B), Tanggal (C), Link (E)")
+    with col_stats:
+        with st.container():
+            st.markdown("### 📊 Statistik")
+            st.metric("Data Dalam Antrean", len(st.session_state.data))
+            st.metric("Data Terakhir Diproses", len(st.session_state.last_processed))
+            with st.expander("🔑 Email Service Account"):
+                st.code(st.secrets["gcp_service_account"]["client_email"])
 
-    st.divider()
-    
+    st.write("---")
     if st.session_state.data:
-        st.markdown("### 🔍 Preview Data")
+        st.markdown("### 🔍 Preview Antrean")
         df = pd.DataFrame(st.session_state.data)
         st.dataframe(df, use_container_width=True, hide_index=True)
-        st.download_button("⬇️ Download CSV", df.to_csv(index=False).encode("utf-8"), "rekap_ig.csv", "text/csv")
+        st.download_button("⬇️ Download CSV", df.to_csv(index=False).encode("utf-8"), "rekap.csv", "text/csv")
     else:
-        st.info("Belum ada data untuk ditampilkan.")
+        st.info("Antrean kosong. Silahkan paste data untuk memulai.")
 
-# --- TAB 2: DASHBOARD ---
-with tab2:
-    st.markdown("### 📊 Dashboard Monitoring")
-    st.components.v1.iframe(src=LOOKER_EMBED_URL, width=None, height=720, scrolling=True)
+# --- HALAMAN 2: DASHBOARD ---
+elif page == "Dashboard":
+    st.title("📊 Dashboard Monitoring")
+    st.markdown("Visualisasi data yang telah dikirim ke Google Sheets.")
+    st.components.v1.iframe(src=LOOKER_EMBED_URL, height=800, scrolling=True)
 
-# --- TAB 3: PANDUAN ---
-with tab3:
-    st.markdown("## 📘 Panduan Penggunaan InstaMon")
+# --- HALAMAN 3: PANDUAN ---
+elif page == "Panduan":
+    st.title("📘 Panduan Penggunaan")
     
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.info("**1️⃣ Bookmarklet**\nKlik 'IG to CSV' di browser saat membuka postingan.")
-    with c2:
-        st.info("**2️⃣ Rekap Data**\nPaste di kolom input lalu klik tombol Proses & Kirim.")
-    with c3:
-        st.info("**3️⃣ Dashboard**\nData akan muncul otomatis di tab Dashboard.")
-
-    st.divider()
+    st.markdown("### 🔄 Alur Kerja InstaMon")
     
+
+    st.info("**Tip:** Gunakan shortcut `Ctrl + V` untuk menempel data dengan cepat di area input.")
+
+    st.markdown("#### 🔖 Cara Membuat Bookmarklet")
     col_l, col_r = st.columns([1, 2])
     with col_l:
-        st.markdown("### 🔖 Buat Bookmarklet")
-        st.write("1. Buka Bookmark Manager\n2. Add New Bookmark\n3. Nama: `IG to CSV`\n4. URL: Paste kode JS samping.")
-    
+        st.markdown("""
+        1. Tampilkan Bookmark Bar (`Ctrl+Shift+B`).
+        2. Klik kanan > **Bookmark Manager**.
+        3. Klik **Add New Bookmark**.
+        4. Nama: `IG to CSV`.
+        5. URL: Paste kode di samping.
+        """)
     with col_r:
         st.code("""javascript:(()=>{const permalink=location.href.split("?")[0]; let captionFull=document.querySelector("h1")?.innerText?.trim()||""; if(!captionFull){const og=document.querySelector('meta[property="og:description"]')?.content||""; captionFull=og.includes(":")?og.split(":").slice(1).join(":").trim():og.trim()} const timeEl=document.querySelector("article time[datetime]")||document.querySelector("time[datetime]"); const timestamp=timeEl?timeEl.getAttribute("datetime"):""; const firstSentence=(t)=>{const m=(t||"").match(/^(.+?[.!?])(\s|$)/s); return m?m[1].trim():(t||"").split("\\n")[0].trim()}; const clean=(t)=>firstSentence(t).replace(/\\s+/g," ").replace(/[^\x00-\x7F]/g,"").replace(/[^A-Za-z0-9 ,\\.?!]+/g," ").trim(); const cap=clean(captionFull).replaceAll('"','""'); const line=`"${permalink}","${cap}","${timestamp}"`; navigator.clipboard.writeText(line).then(()=>alert("CSV disalin:\\n"+line)).catch(()=>prompt("Copy CSV:",line));})();""", language="javascript")
-
-st.markdown("---")
-st.caption("InstaMon BPS v2.0 • Built with ❤️ for better monitoring")
