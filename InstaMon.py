@@ -98,6 +98,53 @@ def send_to_gsheet(rows):
         return False
 
 # =========================================================
+# HELPER FUNCTIONS
+# =========================================================
+def first_sentence(text):
+    if not text:
+        return ""
+    m = re.search(r"(.+?[.!?])", text)
+    return m.group(1) if m else text
+
+def clean_caption(text):
+    text = (text or "").replace("\n", " ").replace("\r", " ")
+    text = text.encode("ascii", "ignore").decode("ascii")
+    text = first_sentence(text)
+    text = re.sub(r"[^A-Za-z0-9 ,.!?]+", " ", text)
+    return " ".join(text.split()).strip()
+
+def parse_csv_content(csv_text, existing_links):
+    reader = csv.reader(StringIO(csv_text))
+    hasil = []
+    skipped = 0
+
+    for row in reader:
+        if len(row) < 3:
+            continue
+
+        link, caption, ts = row[0].strip(), row[1], row[2]
+
+        if not link or link in existing_links:
+            skipped += 1
+            continue
+
+        existing_links.add(link)
+
+        ts = ts.strip()
+        if ts.endswith("Z"):
+            ts = ts.replace("Z", "+00:00")
+
+        tanggal = datetime.fromisoformat(ts).strftime("%m-%d-%Y")
+
+        hasil.append({
+            "Caption": clean_caption(caption),
+            "Tanggal": tanggal,
+            "Link": link
+        })
+
+    return hasil, skipped
+
+# =========================================================
 # LOGIN LOGIC
 # =========================================================
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
@@ -150,68 +197,106 @@ st.write("---")
 # =========================================================
 tab1, tab2, tab3 = st.tabs(["⚡ Input Data", "📊 Dashboard Looker", "📖 Panduan"])
 with tab1:
-    st.markdown("## 🛠️ Input & Proses Data Instagram")
-    st.caption("Format hasil bookmark: **link, caption, timestamp**")
+    # --- BAGIAN ATAS: INPUT & AKSI ---
+    col_in, col_opt = st.columns([2, 1])
+    
+    with col_in:
+        st.markdown("#### 📥 Paste Data")
+        # Menggunakan container agar area input terlihat seperti kartu (card)
+        with st.container(border=True):
+            input_csv = st.text_area(
+                "Masukkan kode dari bookmarklet:", 
+                height=215, 
+                placeholder="Link, Caption, Timestamp...",
+                label_visibility="collapsed" # Menyembunyikan label agar lebih clean
+            )
+    
+    with col_opt:
+        st.markdown("#### ⚙️ Aksi Cepat")
+        with st.container(border=True):
+            # Penataan tombol dengan icon dan warna yang menarik
+            btn_proses = st.button("⚡ Proses & Bersihkan", type="primary", use_container_width=True)
+            st.write("") # Memberi sedikit jarak antar tombol
+            btn_gsheet = st.button("📤 Push ke GSheet", use_container_width=True)
+            st.write("")
+            btn_clear = st.button("🗑️ Kosongkan Antrean", use_container_width=True)
+            
+            # Tambahan informasi kecil di bawah tombol agar tidak kosong
+            st.divider()
+            st.caption("ℹ️ Pastikan format CSV sesuai dengan output dari bookmarklet Instagram.")
 
-    with st.container(border=True):
-        pasted_text = st.text_area(
-            "📋 Paste Data CSV",
-            height=220
-        )
+    # --- LOGIKA PROSES (LOGIKA ASLI ANDA) ---
+    if btn_proses:
+        if input_csv.strip():
+            # Memanggil fungsi parse asli Anda
+            existing_links = {d["Link"] for d in st.session_state.data}
+            data_baru, skipped = parse_csv_content(input_csv, existing_links)
+            
+            st.session_state.data.extend(data_baru)
+            st.session_state.last_processed = data_baru
+            
+            st.toast("Data sedang diproses...", icon="⏳")
+            st.success(f"✅ {len(data_baru)} data berhasil dibersihkan!")
+            if skipped > 0:
+                st.warning(f"⚠️ {skipped} data duplikat dilewati.")
+        else:
+            st.warning("Input masih kosong! Silahkan paste data terlebih dahulu.")
 
-    with st.expander("🔐 Informasi Service Account"):
-        st.markdown("Share Google Sheet ke email ini sebagai **Editor**:")
-        st.code(st.secrets["gcp_service_account"]["client_email"])
+    # --- LOGIKA GSHEET (LOGIKA ASLI ANDA) ---
+    if btn_gsheet:
+        if not st.session_state.last_processed:
+            st.warning("Belum ada data baru untuk dikirim.")
+        else:
+            with st.spinner("Sedang mengirim ke Google Sheets..."):
+                send_to_gsheet(st.session_state.last_processed)
+                st.balloons() # Efek visual sukses
+                st.success(f"✅ {len(st.session_state.last_processed)} baris berhasil dikirim!")
 
-    col1, col2, col3 = st.columns(3)
+    # --- LOGIKA CLEAR (LOGIKA ASLI ANDA) ---
+    if btn_clear:
+        st.session_state.data = []
+        st.session_state.last_processed = []
+        st.success("Antrean berhasil dikosongkan.")
+        st.rerun()
 
-    with col1:
-        if st.button("🚀 Proses Data", use_container_width=True):
-            if not pasted_text.strip():
-                st.warning("Paste data terlebih dahulu.")
-            else:
-                existing_links = {d["Link"] for d in st.session_state.data}
-                data_baru, skipped = parse_csv_content(
-                    pasted_text,
-                    existing_links
-                )
-
-                st.session_state.data.extend(data_baru)
-                st.session_state.last_processed = data_baru
-
-                st.success(f"✅ {len(data_baru)} data diproses")
-                if skipped > 0:
-                    st.warning(f"⚠️ {skipped} data dilewati (duplikat link)")
-
-    with col2:
-        if st.button("🗑️ Reset Data", use_container_width=True):
-            st.session_state.data = []
-            st.session_state.last_processed = []
-            st.success("Data berhasil direset")
-
-    with col3:
-        if st.button("📤 Kirim ke Google Sheets", use_container_width=True):
-            rows = st.session_state.last_processed
-            if not rows:
-                st.warning("Belum ada data baru.")
-            else:
-                send_to_gsheet(rows)
-                st.success(f"✅ {len(rows)} baris terkirim ke Google Sheets")
-
+    # --- BAGIAN BAWAH: PREVIEW ---
     st.divider()
-
+    st.markdown("#### 🔍 Preview Hasil")
+    
     if st.session_state.data:
+        # Menampilkan data dalam dataframe yang rapi
         df = pd.DataFrame(st.session_state.data)
-        st.dataframe(df, use_container_width=True)
-
+        st.dataframe(
+            df, 
+            use_container_width=True, 
+            hide_index=True, # Menghilangkan kolom indeks agar lebih profesional
+            column_config={
+                "Link": st.column_config.LinkColumn("Link Postingan"),
+                "Tanggal": st.column_config.TextColumn("Tanggal Post"),
+                "Caption": st.column_config.TextColumn("Caption (Clean)")
+            }
+        )
+        
+        # Tombol download di bawah tabel
         st.download_button(
-            "⬇️ Download CSV",
-            df.to_csv(index=False).encode("utf-8"),
-            "hasil_monitoring_instagram.csv",
-            "text/csv"
+            label="⬇️ Download CSV",
+            data=df.to_csv(index=False).encode("utf-8"),
+            file_name=f"rekap_ig_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
         )
     else:
-        st.info("Belum ada data.")
+        # Tampilan saat data kosong menggunakan st.info
+        st.info("Belum ada data di antrean. Silahkan paste data di atas untuk memulai proses rekap.")
+with tab2:
+    st.markdown("## 📊 Dashboard Monitoring Instagram")
+    st.components.v1.iframe(
+        src=LOOKER_EMBED_URL,
+        width=1400,
+        height=720,
+        scrolling=True
+    )
+
+
 with tab3:
     st.markdown("# 📘 Informasi Penggunaan InstaMon")
     st.caption("Panduan penggunaan web monitoring Instagram")
@@ -319,6 +404,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
