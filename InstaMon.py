@@ -16,6 +16,7 @@ st.set_page_config(
     page_icon="✨"
 )
 
+LOOKER_EMBED_URL = "https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5bd-43eb-881c-e74a9d86ff75/page/Z52hF"
 # Custom CSS untuk tampilan Modern & Clean
 st.markdown("""
     <style>
@@ -404,6 +405,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
