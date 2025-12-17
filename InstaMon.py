@@ -189,18 +189,109 @@ with tab2:
     """, unsafe_allow_html=True)
 
 with tab3:
-    st.header("📘 Cara Penggunaan")
+    st.markdown("# 📘 Informasi Penggunaan InstaMon")
+    st.caption("Panduan penggunaan web monitoring Instagram")
+
+    st.divider()
+
+    # ======================
+    # SECTION: APA ITU INSTAMON
+    # ======================
+    st.markdown("""
+    ### 🧠 Apa itu InstaMon?
     
-    # Diagram Alur Visual
-    st.markdown("### 🔄 Workflow Sistem")
+    **InstaMon** adalah web internal untuk **merekap konten Instagram**
+    dan **memonitoring konten kegiatan**.
+    """)
     
 
-    col_step1, col_step2 = st.columns(2)
-    with col_step1:
-        with st.expander("📌 Langkah 1: Pasang Bookmarklet", expanded=True):
-            st.write("Buka Bookmark Manager, lalu tambahkan URL ini:")
-            st.code("javascript: (kode js anda...)")
-    
-    with col_step2:
-        with st.expander("📌 Langkah 2: Cara Input", expanded=True):
-            st.write("1. Buka postingan IG\n2. Klik Bookmark\n3. Paste di sini!")
+    st.divider()
+
+    # ======================
+    # SECTION: ALUR KERJA
+    # ======================
+    st.markdown("## 🔄 Alur Kerja InstaMon")
+
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.info("""
+        **1️⃣Bookmarklet**
+        - Klik IG to CSV
+        - Data disalin
+        """)
+    with c2:
+        st.info("""
+        **2️⃣ Rekap Data**
+        - Paste hasil bookmarklet
+        - Proses data
+        - Kirim data ke Google Sheets
+        """)
+    with c3:
+        st.info("""
+        **3️⃣ Dashboard Monitoring**
+        - Hasil rekap data yang dilakukan akan ditampilkan pada dashbaord tersebut
+        """)
+    st.divider()
+    # ======================
+    # SECTION: CARA PAKAI
+    # ======================
+    st.markdown("## ▶️ Cara Penggunaan InstaMon")
+
+    st.markdown("""
+    1. Login Instagram melalui browser  
+    2. Buka **1 postingan Instagram**
+    3. Klik bookmark **IG to CSV** yang sudah dibuat (lihat halaman bawah untuk cara pembuatan bookmarklet)
+    4. Data otomatis tersalin
+    5. Paste ke kolom CSV di InstaMon
+    6. Klik **Proses Data**
+    """)
+
+    st.divider()
+    # ======================
+    # SECTION: BOOKMARKLET
+    # ======================
+    st.markdown("## 🔖 Cara Membuat Bookmarklet")
+
+    left, right = st.columns([1, 2])
+
+    with left:
+        st.markdown("""
+        1. Tampilkan **Bookmark Bar** dengan Ctrl+Shift+B
+        2. Klik kanan pada **Bookmark Bar** dan klik **Bookmark Manager**
+        3. KLik **Add New Bookmark**  
+        4. Nama: `IG to CSV`
+        4. URL: paste kode JS di samping
+        5. Simpan
+        """)
+
+    with right:
+        st.code("""
+javascript:(()=>{const permalink=location.href.split("?")[0];
+let captionFull=document.querySelector("h1")?.innerText?.trim()||"";
+if(!captionFull){
+ const og=document.querySelector('meta[property="og:description"]')?.content||"";
+ captionFull=og.includes(":")?og.split(":").slice(1).join(":").trim():og.trim()
+}
+const timeEl=document.querySelector("article time[datetime]")||document.querySelector("time[datetime]");
+const timestamp=timeEl?timeEl.getAttribute("datetime"):"";
+
+const firstSentence=(t)=>{const m=(t||"").match(/^(.+?[.!?])(\s|$)/s);
+return m?m[1].trim():(t||"").split("\\n")[0].trim()};
+
+const clean=(t)=>firstSentence(t)
+.replace(/\\s+/g," ")
+.replace(/[^\x00-\x7F]/g,"")
+.replace(/[^A-Za-z0-9 ,\\.?!]+/g," ")
+.trim();
+
+const cap=clean(captionFull).replaceAll('"','""');
+const line=`"${permalink}","${cap}","${timestamp}"`;
+
+navigator.clipboard.writeText(line)
+.then(()=>alert("CSV disalin:\\n"+line))
+.catch(()=>prompt("Copy CSV:",line));
+})();
+        """, language="javascript")
+
+    st.divider()
