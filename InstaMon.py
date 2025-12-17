@@ -212,14 +212,6 @@ with tab1:
         )
     else:
         st.info("Belum ada data.")
-with tab2:
-    st.markdown("""
-        <div style="background-color: white; padding: 10px; border-radius: 15px;">
-            <iframe src="https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5bd-43eb-881c-e74a9d86ff75/page/Z52hF" 
-            width="100%" height="800" frameborder="0" style="border:0" allowfullscreen></iframe>
-        </div>
-    """, unsafe_allow_html=True)
-
 with tab3:
     st.markdown("# 📘 Informasi Penggunaan InstaMon")
     st.caption("Panduan penggunaan web monitoring Instagram")
@@ -327,6 +319,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
