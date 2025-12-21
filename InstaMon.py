@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 # CONFIG & PREMIUM STYLING
 # =========================================================
 st.set_page_config(
-    page_title="InstaMon BPS - Premium Dashboard",
+    page_title="InstaMon BPS",
     layout="wide",
     page_icon="✨"
 )
@@ -462,6 +462,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
