@@ -8,7 +8,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # =========================================================
-# CONFIG & PREMIUM STYLING
+# CONFIG
 # =========================================================
 st.set_page_config(
     page_title="InstaMon BPS",
@@ -17,17 +17,14 @@ st.set_page_config(
 )
 
 LOOKER_EMBED_URL = "https://lookerstudio.google.com/embed/reporting/f8d6fc1b-b5bd-43eb-881c-e74a9d86ff75/page/Z52hF"
-# # Custom CSS untuk tampilan Modern & Clean
 st.markdown("""
     <style>
-    /* Mengubah font dan background */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
 
-    /* Menghilangkan header asli Streamlit */
     header[data-testid="stHeader"] {
         background-color: rgba(0,0,0,0) !important;
     }
@@ -155,7 +152,6 @@ def clean_caption(text):
     text = re.sub(r"[^A-Za-z0-9 ,.!?]+", " ", text)
     return " ".join(text.split()).strip()
 
-# Tambahkan parameter nama_penginput
 def parse_csv_content(csv_text, existing_links, nama_penginput): 
     reader = csv.reader(StringIO(csv_text))
     hasil = []
@@ -220,7 +216,6 @@ with st.sidebar:
     if st.button("Log Out"):
         st.session_state.logged_in = False
         st.rerun()
-    # --- TAMBAHAN: DEVELOPED BY ---
     st.write("---")
     st.markdown("""
         <div style="padding: 10px; border-radius: 10px; background-color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.2);">
@@ -273,7 +268,6 @@ with tab1:
             st.divider()
             st.caption("ℹ️ Pastikan format CSV sesuai dengan output dari bookmarklet Instagram.")
 
-    # --- LOGIKA PROSES (LOGIKA ASLI ANDA) ---
     if btn_proses:
        if input_csv.strip() and nama_penginput.strip():
             existing_links = {d["Link"] for d in st.session_state.data}
@@ -287,8 +281,7 @@ with tab1:
             st.success(f"✅ {len(data_baru)} data diproses!!")
             if skipped > 0:
                 st.warning(f"⚠️ {skipped} data duplikat dilewati.")
-    
-    # --- LOGIKA GSHEET (LOGIKA ASLI ANDA) ---
+
     if btn_gsheet:
         if not st.session_state.last_processed:
             st.warning("Belum ada data baru untuk dikirim.")
@@ -298,7 +291,6 @@ with tab1:
                 st.balloons() # Efek visual sukses
                 st.success(f"✅ {len(st.session_state.last_processed)} baris berhasil dikirim!")
     
-    # --- LOGIKA CLEAR (LOGIKA ASLI ANDA) ---
     if btn_clear:
         st.session_state.data = []
         st.session_state.last_processed = []
@@ -317,7 +309,7 @@ with tab1:
                 </a>
             </div>
         """, unsafe_allow_html=True)
-    # --- BAGIAN BAWAH: PREVIEW ---
+
     st.divider()
     st.markdown("#### 🔍 Preview Hasil")
     
@@ -335,7 +327,6 @@ with tab1:
             }
         )
         
-        # Tombol download di bawah tabel
         st.download_button(
             label="⬇️ Download CSV",
             data=df.to_csv(index=False).encode("utf-8"),
@@ -343,7 +334,6 @@ with tab1:
             mime="text/csv",
         )
     else:
-        # Tampilan saat data kosong menggunakan st.info
         st.info("Belum ada data di antrean. Silahkan paste data di atas untuk memulai proses rekap.")
 with tab2:
     st.markdown("## 📊 Dashboard Monitoring Instagram")
@@ -361,9 +351,6 @@ with tab3:
 
     st.divider()
 
-    # ======================
-    # SECTION: APA ITU INSTAMON
-    # ======================
     st.markdown("""
     ### 🧠 Apa itu InstaMon?
     
@@ -372,11 +359,8 @@ with tab3:
     """)
     
 
-    st.divider()
-
-    # ======================
-    # SECTION: ALUR KERJA
-    # ======================
+    st.divider(
+    
     st.markdown("## 🔄 Alur Kerja InstaMon")
 
     c1, c2, c3 = st.columns(3)
@@ -400,9 +384,6 @@ with tab3:
         - Hasil rekap data yang dilakukan akan ditampilkan pada dashbaord tersebut
         """)
     st.divider()
-    # ======================
-    # SECTION: CARA PAKAI
-    # ======================
     st.markdown("## ▶️ Cara Penggunaan InstaMon")
 
     st.markdown("""
@@ -415,9 +396,7 @@ with tab3:
     """)
 
     st.divider()
-    # ======================
-    # SECTION: BOOKMARKLET
-    # ======================
+
     st.markdown("## 🔖 Cara Membuat Bookmarklet")
 
     left, right = st.columns([1, 2])
@@ -462,6 +441,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
