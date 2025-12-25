@@ -359,7 +359,7 @@ with tab3:
     """)
     
 
-    st.divider(
+    st.divider()
     
     st.markdown("## 🔄 Alur Kerja InstaMon")
 
@@ -441,6 +441,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
