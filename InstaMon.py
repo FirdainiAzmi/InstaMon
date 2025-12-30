@@ -122,18 +122,15 @@ def send_to_gsheet(rows):
         client = gspread.authorize(creds)
         ws = client.open_by_key(st.secrets["gsheet"]["spreadsheet_id"]).worksheet(st.secrets["gsheet"]["sheet_name"])
         
-        # Data yang disusun: B=Caption, C=Tanggal, D="", E=Link, F=Penginput
         values = [[r["Caption"], r["Tanggal"], "", r["Link"], r["Penginput"]] for r in rows]
         
         last_row = len(ws.get_all_values())
         start_row = max(2, last_row + 1)
-        
-        # PERBAIKAN: Range harus sampai kolom F (Kolom ke-6)
-        # B = Kolom 2, F = Kolom 6. 
+  
         ws.update(f"B{start_row}:F{start_row + len(rows) - 1}", values, value_input_option="RAW")
         return True
     except Exception as e:
-        st.error(f"Gagal mengirim ke GSheet: {e}") # Agar Anda tahu jika ada error teknis
+        st.error(f"Gagal mengirim ke GSheet: {e}") 
         return False
 
 # =========================================================
@@ -441,6 +438,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
