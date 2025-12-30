@@ -175,7 +175,7 @@ def parse_csv_content(csv_text, existing_links, nama_penginput):
             "Caption": clean_caption(caption),
             "Tanggal": tanggal,
             "Link": link,
-            "Penginput": nama_penginput # Masukkan variabel ke sini
+            "Penginput": nama_penginput 
         })
 
     return hasil, skipped
@@ -438,6 +438,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
