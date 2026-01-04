@@ -240,7 +240,7 @@ with tab1:
     col_in, col_opt = st.columns([2, 1])
 
     with col_in:
-        st.markdown("#### 📥 Paste Data")
+        st.markdown("#### 📥 Masukkan Data")
         with st.container(border=True):
             # Tambahkan input nama penginput di sini
             nama_penginput = st.text_input("👤 Nama Penginput:", placeholder="Masukkan nama Anda...")
@@ -252,7 +252,6 @@ with tab1:
             )
     
     with col_opt:
-        st.markdown("#### ⚙️ Aksi Cepat")
         with st.container(border=True):
             # Penataan tombol dengan icon dan warna yang menarik
             btn_proses = st.button("⚡ Proses Data", type="primary", use_container_width=True)
@@ -438,6 +437,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
