@@ -208,7 +208,7 @@ if not st.session_state.logged_in:
 # =========================================================
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/data-configuration.png", width=50)
-    st.title("Settings")
+    # st.title("Settings")
     st.info(f"Connected to GSheet: \n`{st.secrets['gsheet']['sheet_name']}`")
     if st.button("Log Out"):
         st.session_state.logged_in = False
@@ -255,15 +255,15 @@ with tab1:
         st.markdown("#### ⚙️ Aksi Cepat")
         with st.container(border=True):
             # Penataan tombol dengan icon dan warna yang menarik
-            btn_proses = st.button("⚡ Proses & Bersihkan", type="primary", use_container_width=True)
+            btn_proses = st.button("⚡ Proses Data", type="primary", use_container_width=True)
             st.write("") # Memberi sedikit jarak antar tombol
             btn_gsheet = st.button("📤 Push ke GSheet", use_container_width=True)
             st.write("")
-            btn_clear = st.button("🗑️ Kosongkan Antrean", use_container_width=True)
+            btn_clear = st.button("🗑️ Hapus Data", use_container_width=True)
             
             # Tambahan informasi kecil di bawah tombol agar tidak kosong
             st.divider()
-            st.caption("ℹ️ Pastikan format CSV sesuai dengan output dari bookmarklet Instagram.")
+            st.caption("ℹ️ Pastikan bookmarklet sudah di isi dengan code javasript yang ada pada panduan")
 
     if btn_proses:
        if input_csv.strip() and nama_penginput.strip():
@@ -438,6 +438,7 @@ navigator.clipboard.writeText(line)
         """, language="javascript")
 
     st.divider()
+
 
 
 
