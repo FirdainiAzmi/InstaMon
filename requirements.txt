@@ -1,9 +1,6 @@
-instaloader
-gspread
-pandas
 streamlit
+pandas
+gspread
 google-auth
+instaloader
 altair==4.2.2
-
-
-
