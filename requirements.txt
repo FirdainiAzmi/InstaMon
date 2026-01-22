@@ -3,5 +3,7 @@ gspread
 pandas
 streamlit
 google-auth
+altair==4.2.2
+
 
 
